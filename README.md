@@ -1,15 +1,19 @@
+
 <div align="center">
 
 <img src="Frontend/front/public/favicon-512.png" alt="Adaptive Exam AI" width="110" />
 
 # Adaptive Exam AI
 
-**AI-агент для тестирования и наставничества (ITSTEP College Hackathon)**  
+**AI-агент для тестирования и наставничества **  
 Персонализированная система экзаменов: генерация тестов → авто-проверка → объяснение ошибок → рекомендации → доп. задания → история и аналитика преподавателя.
 
 <br/>
-<img width="1920" height="900" alt="image" src="https://github.com/user-attachments/assets/7865cc8f-cf13-4af8-a57e-c9cca497c526" />
 
+<img width="1920" height="901" alt="image" src="https://github.com/user-attachments/assets/083bc5b4-f536-404b-be67-f5a82148cff4" />
+
+
+<br/>
 
 ![Node.js](https://img.shields.io/badge/Node.js-Express-111?logo=node.js&logoColor=white)
 ![Express](https://img.shields.io/badge/Express-API-111?logo=express&logoColor=white)
@@ -35,99 +39,132 @@
 
 ---
 
-## Что делает проект
+## Описание проекта
+
+Adaptive Exam AI — прототип персонализированной системы тестирования, которая объединяет:
+- **генерацию тестов** по предмету и уровню сложности,
+- **автоматическую проверку** ответов,
+- **объяснение ошибок** и рекомендации по темам,
+- **дополнительные задания** для закрепления слабых тем,
+- **историю попыток** и отслеживание прогресса,
+- **аналитику преподавателя** по группам студентов.
+
+---
+
+## Возможности
 
 ### Для студента
-- регистрация/вход (JWT, роли student/teacher)
-- выбор предмета и сложности
-- генерация **уникального** теста
-- прохождение теста и отправка ответов
-- AI проверяет и возвращает:
-  - score / percent
-  - слабые темы (weak topics)
-  - рекомендации (recommendations)
-  - доп. задания (extra tasks)
-  - readiness score (готовность)
+- регистрация и вход (JWT)
+- выбор предмета/уровня/кол-ва вопросов
+- генерация теста (учёт слабых тем через `skill_map`)
+- отправка ответов
+- AI feedback:
+  - `score / max_score / percent`
+  - `weak_topics`
+  - `recommendations`
+  - `extra_tasks`
+  - `readiness` (готовность)
 
 ### Для преподавателя
-- управление группами студентов
+- создание групп и управление студентами
 - аналитика по группе:
-  - overview (средний процент, попытки)
-  - слабые темы группы
-  - тренд успеваемости
-  - “at risk” студенты ниже порога
+  - overview (students_count, attempts_count, avg_percent)
+  - слабые темы
+  - тренд (динамика среднего процента)
+  - студенты “at risk” (ниже порога)
 
 ---
 
 ## Стек
 
-### Backend
+### Backend (Express)
 - Node.js + Express
 - PostgreSQL
-- JWT + роли
-- Zod validation
+- JWT (roles: `student`, `teacher`)
+- Zod (валидация)
 
-### AI Service
+### AI Service (FastAPI + torch)
 - FastAPI
 - torch
 - sentence-transformers (семантическая проверка short-answer)
 - transformers (T5 генерация вопросов, hybrid режим)
+- pydantic
 
-### Frontend
+### Frontend (React)
 - React + Vite
-- React Router, React Query
+- React Router
+- React Query
 - Zustand
 - TailwindCSS
 - react-hook-form + zod
+
+### ERD - диаграмма
+
+<img width="1938" height="1144" alt="Untitled" src="https://github.com/user-attachments/assets/5bd3a343-9767-4b84-be65-d2cd6055a6cb" />
+
 
 ---
 
 ## Архитектура
 
-```mermaid
-flowchart LR
-  UI[React + Vite<br/>Frontend] -->|HTTP| API[Express API<br/>Backend]
-  API -->|SQL| DB[(PostgreSQL)]
-  API -->|HTTP JSON| AI[FastAPI AI Service<br/>torch + transformers]
-Структура репозитория
 
-у тебя так:
+React (Vite Frontend)
+│
+▼
+Express API (Node.js Backend)
+│
+├── PostgreSQL (Database)
+│
+└── FastAPI AI Service (torch + transformers)
 
-Backend/          # Express API
-AI/               # FastAPI AI service
-Frontend/front/   # React (Vite)
-Быстрый старт (локально)
-Требования
 
-Node.js 18+ (лучше 20)
+---
 
-Python 3.10+ (лучше 3.11)
+## Структура репозитория
 
-PostgreSQL 14+
 
-1) PostgreSQL
+Backend/ # Express API
+AI/ # FastAPI AI service
+Frontend/front/ # React (Vite)
 
-Создай базу:
 
+---
+
+## Быстрый старт (локально)
+
+### Требования
+- Node.js 18+ (лучше 20)
+- Python 3.10+ (лучше 3.11)
+- PostgreSQL 14+
+
+---
+
+## 1) PostgreSQL
+
+1) Создай базу:
+```sql
 CREATE DATABASE hackathon;
 
-Прогони schema.sql (тот SQL, который ты прислал — create tables).
+Прогони SQL schema (таблицы users, groups, subjects, topics, tests, questions, attempts, attempt_question_feedback).
 
 2) AI Service (FastAPI)
 Установка
 cd AI
 python -m venv .venv
+
 # Windows:
 # .venv\Scripts\activate
 # macOS/Linux:
 # source .venv/bin/activate
 
 pip install -r requirements.txt
-requirements.txt (рекомендую хранить в AI/requirements.txt)
+requirements.txt (AI/requirements.txt)
 fastapi==0.110.0
 uvicorn[standard]==0.29.0
+
 torch==2.2.2
 sentence-transformers==2.6.1
+
 transformers==4.39.3
 pydantic==2.6.4
 Запуск
@@ -142,6 +179,9 @@ http://localhost:8000/docs
 cd Backend
 npm install
 .env (Backend/.env)
+
+Создай файл Backend/.env:
+
 AI_URL=http://localhost:8000
 PORT=5000
 DATABASE_URL=postgresql://postgres:1234@localhost:5432/hackathon
@@ -171,27 +211,27 @@ http://localhost:5173
 
 PostgreSQL
 
-AI (FastAPI) :8000
+AI (FastAPI) — http://localhost:8000
 
-Backend (Express) :5000
+Backend (Express) — http://localhost:5000
 
-Frontend (Vite) :5173
+Frontend (Vite) — http://localhost:5173
 
-Переменные окружения (AI)
+Переменные окружения (AI Service)
 
-AI сервис поддерживает параметры:
+AI service читает env:
 
 EMBED_MODEL (default: sentence-transformers/all-MiniLM-L6-v2)
 
 GEN_MODEL (default: google/flan-t5-small)
 
-AI_SAFE_MODE=1 — отключить T5 генерацию (будет только bank)
+AI_SAFE_MODE=1 — отключить T5 генерацию (останется только bank)
 
-AI_MAX_Q — максимум AI вопросов
+AI_MAX_Q — максимум AI вопросов за тест
 
 AI_FRACTION — доля AI вопросов (например 0.3)
 
-AI_TIMEOUT_SEC — таймаут генерации
+AI_TIMEOUT_SEC — таймаут генерации одного вопроса
 
 API маршруты (Backend)
 Auth
@@ -246,7 +286,9 @@ GET /teacher/groups/:groupId/analytics/at-risk?threshold=50
 0) Health check
 curl http://localhost:5000/health
 1) Регистрация
+
 Student
+
 curl -X POST http://localhost:5000/auth/register \
   -H "Content-Type: application/json" \
   -d '{
@@ -255,7 +297,9 @@ curl -X POST http://localhost:5000/auth/register \
     "email":"student1@mail.com",
     "password":"123456"
   }'
+
 Teacher
+
 curl -X POST http://localhost:5000/auth/register \
   -H "Content-Type: application/json" \
   -d '{
@@ -272,15 +316,12 @@ curl -X POST http://localhost:5000/auth/login \
     "password":"123456"
   }'
 
-Скопируй token из ответа — дальше будет:
+Скопируй token из ответа:
 
 TOKEN="PASTE_TOKEN_HERE"
 3) Список предметов
 curl http://localhost:5000/subjects
-4) Генерация теста /tests/generate
-
-Требуется Bearer token (роль student)
-
+4) Генерация теста — /tests/generate (student)
 curl -X POST http://localhost:5000/tests/generate \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
@@ -289,31 +330,14 @@ curl -X POST http://localhost:5000/tests/generate \
     "level": "middle",
     "num_questions": 10
   }'
-
-Ответ вернёт:
-
-test.id (сохрани его)
-
-questions[] (включая q_index, q_type, prompt, options)
-
-5) Начать попытку /attempts/start
+5) Начать попытку — /attempts/start (student)
 curl -X POST http://localhost:5000/attempts/start \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
     "test_id": 1
   }'
-
-Ответ вернёт attempt.id.
-
-6) Отправить ответы /attempts/:attemptId/submit
-
-Формат answers — объект, где ключи это "1", "2" ... (q_index), значения:
-
-для mcq: строка (выбранный option)
-
-для short: строка (текст ответа)
-
+6) Отправить ответы — /attempts/:attemptId/submit (student)
 curl -X POST http://localhost:5000/attempts/1/submit \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
@@ -324,42 +348,21 @@ curl -X POST http://localhost:5000/attempts/1/submit \
       "3": "INNER JOIN returns only matched rows; LEFT JOIN returns all left rows and NULLs for non-matches."
     }
   }'
-
-В ответе будет:
-
-attempt (score/max/percent + ai_summary)
-
-per_question_feedback[] (explanation/recommendation/confidence)
-
-user_skill_map (обновлённая карта навыков)
-
-7) История попыток
+7) История попыток — /attempts (student)
 curl -H "Authorization: Bearer $TOKEN" http://localhost:5000/attempts
-Скриншоты (опционально, красиво)
+Скриншоты (опционально)
 
-Создай папку:
-
-assets/
-
-И добавь:
-
-assets/ui-login.png
-
-assets/ui-student-dashboard.png
-
-assets/ui-test.png
-
-assets/ui-teacher-analytics.png
-
-После этого вставь в README:
 
 ## Screenshots
-![Login](assets/ui-login.png)
-![Student dashboard](assets/ui-student-dashboard.png)
-![Test](assets/ui-test.png)
-![Teacher analytics](assets/ui-teacher-analytics.png)
+<img width="1920" height="903" alt="image" src="https://github.com/user-attachments/assets/06d08ad8-2612-42e0-a3ba-798b53b90a1e" />
+<img width="1920" height="899" alt="image" src="https://github.com/user-attachments/assets/88eb1bd3-9f3c-4f9e-909a-97026b855a91" />
+<img width="1904" height="902" alt="image" src="https://github.com/user-attachments/assets/6d29308e-67f5-4c79-925f-87e6ae1bf3c4" />
+<img width="1905" height="900" alt="image" src="https://github.com/user-attachments/assets/c1342108-6799-45ba-abb8-a917244ab647" />
+<img width="1920" height="901" alt="image" src="https://github.com/user-attachments/assets/09b389ae-f1ea-4b04-bd74-c62975713584" />
+
+
 Безопасность
 
-.env не коммить (он у тебя в gitignore ✅)
+.env не коммить (у тебя gitignore настроен ✅)
 
 JWT_SECRET должен быть случайным и длинным
