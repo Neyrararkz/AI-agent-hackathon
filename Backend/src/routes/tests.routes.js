@@ -7,5 +7,3 @@ router.post("/generate", auth, requireRole("student"), asyncHandler(c.generateTe
 router.get("/:testId", auth, requireRole("student"), asyncHandler(c.getTest));
 
 module.exports = router;
-
-
